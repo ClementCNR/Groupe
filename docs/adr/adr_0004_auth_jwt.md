@@ -5,23 +5,31 @@
 
 ## Contexte
 
-L’application doit gérer plusieurs types d’utilisateurs (employés, secrétaires, managers) avec des accès et vues personnalisés.  
-L’expérience utilisateur doit rester fluide sans authentification intrusive, tout en garantissant la sécurité des accès.
+L’application doit gérer plusieurs types d’utilisateurs, avec des rôles et des vues personnalisés, sans perturber l’expérience utilisateur.
+
+## Options considérées
+
+1. **Session côté serveur (Spring Session, cookies)**
+   - ✅ Simple à mettre en place
+   - ❌ Moins adapté aux API REST stateless
+   - ❌ Moins flexible pour du frontend moderne
+
+2. **OAuth2 / OpenID Connect**
+   - ✅ Sécurisé et standardisé
+   - ❌ Plus complexe à mettre en place
+   - ❌ Surdimensionné pour un MVP interne
+
+3. **JWT (JSON Web Token)** ✅
+   - ✅ Stateless, portable, sécurisé
+   - ✅ Compatible avec Spring Security
+   - ✅ Facile à transmettre via headers
 
 ## Décision
 
-Nous utiliserons **JSON Web Token (JWT)** comme mécanisme d’authentification.
-
-## Raisons
-
-- JWT est stateless : pas de session à stocker côté serveur
-- Compatible avec les API REST
-- Facilement vérifiable côté backend
-- Intégrable côté frontend avec des headers `Authorization`
-- Permet l’encodage du rôle, de l’ID utilisateur et d’expiration dans le token
+Utilisation de JWT pour l’authentification.
 
 ## Conséquences
 
-- Les endpoints seront sécurisés avec Spring Security + JWT Filter
-- Le frontend stockera le token dans `localStorage` ou `cookies` selon le besoin
-- Des middlewares vérifieront l’authentification avant chaque appel API
+- Filtrage via Spring Security
+- Stockage du token côté frontend (localStorage ou cookies)
+- Auth middleware pour protéger les routes

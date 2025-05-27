@@ -13,16 +13,27 @@ L’application doit notifier les utilisateurs (employés et secrétaires) lors 
 
 Afin d’assurer l’envoi de ces notifications de manière fiable et scalable, il est nécessaire d’externaliser ce service à une solution de messagerie.
 
+## Options considérées
+
+1. **SMTP interne depuis le backend**
+   - ✅ Simple à implémenter
+   - ❌ Pas de templating
+   - ❌ Moins de garantie de délivrabilité
+   - ❌ Pas de file de reprise
+
+2. **Utilisation d’un plugin mail Spring directement**
+   - ✅ Intégré au framework
+   - ❌ Non scalable sans ajout d’une queue
+   - ❌ Peu de logs ou de métriques
+
+3. **Service de messagerie externe avec file d'attente** ✅ 
+   - ✅ Résilient et scalable
+   - ✅ Gestion d’erreurs, templates, logs
+   - ✅ Intégration REST via JSON
+
 ## Décision
 
 Nous avons choisi d’intégrer un **système de messagerie externe** (type Mailjet, SendGrid, Amazon SES, ou système interne de messagerie) pour gérer l’envoi des messages à destination des utilisateurs.
-
-## Raisons
-
-- Délégation des contraintes de délivrabilité et de mise en forme
-- Gestion de la mise en file d’attente et des erreurs (ex: quota, email invalide)
-- Possibilité de templating pour des emails dynamiques et multilingues
-- Intégration facile avec des API REST (souvent via POST JSON)
 
 ## Conséquences
 

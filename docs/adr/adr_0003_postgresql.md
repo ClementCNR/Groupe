@@ -8,17 +8,32 @@
 L’application nécessite une base de données relationnelle pour stocker des entités fortement liées : utilisateurs, réservations, places, rôles, historiques, etc.  
 Nous avons besoin d’une solution robuste, open-source, compatible avec Spring Boot, et facilement intégrable dans une stack Docker.
 
+## Options considérées
+
+1. **MySQL**
+   - ✅ Mature, répandue, bien connue
+   - ❌ Moins de support pour les types complexes (JSONB, vues matérialisées)
+   - ❌ Moins d'intégration native avec certains outils Spring avancés
+
+2. **PostgreSQL** ✅ 
+   - ✅ Solide, open-source, riche en fonctionnalités SQL
+   - ✅ Bonne intégration avec Spring Data JPA
+   - ✅ Supporte JSON, transactions avancées, indexation puissante
+   - ❌ Légèrement plus lourd que MySQL pour des cas simples
+
+3. **Oracle**
+   - ✅ Très robuste en entreprise
+   - ❌ Licence coûteuse
+   - ❌ Déploiement complexe
+   - ❌ Surdimensionnée pour un MVP
+
 ## Décision
 
 Nous avons choisi **PostgreSQL** comme système de gestion de base de données relationnelle (SGBDR).
 
-Raisons principales :
+## Justification
 
-- Compatibilité native avec Spring Boot via Spring Data JPA
-- Fiabilité, robustesse et conformité aux standards SQL
-- Fonctionnalités avancées (JSON, indexation, vues matérialisées…)
-- Large adoption et documentation abondante
-- Intégration facile dans des environnements Docker
+PostgreSQL propose le meilleur équilibre entre **puissance**, **souplesse**, **intégration Spring Boot**, et **simplicité de déploiement** en Docker. Son adoption dans l’open-source et sa documentation en font une solution idéale pour notre projet.
 
 ## Conséquences
 
