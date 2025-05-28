@@ -9,7 +9,7 @@ export default function ReservationsPage() {
     const handleReservation = (e) => {
         e.preventDefault();
         console.log("Réservation : ", startDate, endDate);
-        // 🚧 Appel API ici plus tard
+        //  Appel API ici plus tard
     };
 
     return (
