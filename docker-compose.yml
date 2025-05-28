@@ -23,5 +23,15 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
     depends_on:
       - db
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api
+    depends_on:
+      - backend
 volumes:
   db_data: 
