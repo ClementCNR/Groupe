@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   db:
     image: postgres:latest
@@ -11,6 +12,8 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d  # 👈 init script auto-execution
+
   backend:
     build:
       context: ./backend
@@ -23,6 +26,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
     depends_on:
       - db
+
   frontend:
     build:
       context: ./frontend
@@ -33,5 +37,6 @@ services:
       - NEXT_PUBLIC_API_URL=http://localhost:8080/api
     depends_on:
       - backend
+
 volumes:
-  db_data: 
+  db_data:
