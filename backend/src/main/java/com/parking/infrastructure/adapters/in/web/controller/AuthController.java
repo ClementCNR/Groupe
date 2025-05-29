@@ -10,11 +10,9 @@ import com.parking.infrastructure.adapters.out.security.JwtService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.parking.infrastructure.adapters.in.dto.AuthenticationResponseDTO;
 
 @RestController
@@ -31,6 +29,7 @@ public class AuthController {
         this.userMapper = userMapper;
         this.jwtService = jwtService;
     }
+
     @PostMapping("/login")
     @Operation(summary = "Authentifier un utilisateur", description = "Authentifie un utilisateur avec son email et son mot de passe")
     public ResponseEntity<AuthenticationResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
@@ -43,5 +42,17 @@ public class AuthController {
         String token = jwtService.generateToken(authenticatedUser.getEmail());
         UserDTO userDTO = userMapper.toDTO(authenticatedUser);
         return ResponseEntity.ok(new AuthenticationResponseDTO(token, userDTO));
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Déconnexion", description = "Déconnecte l'utilisateur en invalidant son token JWT")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().build();
+        }
+        String token = authHeader.substring(7);
+        authenticationUseCase.logout(token);
+        return ResponseEntity.ok().build();
     }
 } 
