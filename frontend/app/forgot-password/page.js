@@ -1,16 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log("Tentative de connexion :", email, password);
-        // 🚧 Appel API login ici plus tard
+        console.log("Demande de reset pour :", email);
+        // 🚧 Appel API reset password ici plus tard
     };
 
     return (
@@ -20,37 +18,31 @@ export default function LoginPage() {
                 className="bg-white p-8 rounded shadow-md w-80"
             >
                 <h1 className="text-2xl font-bold mb-6 text-center text-blue-600">
-                    Connexion
+                    Mot de passe oublié
                 </h1>
 
                 <input
                     type="email"
-                    placeholder="Email"
+                    placeholder="Nouveau mot de passe"
+                    className="w-full mb-4 p-2 border rounded text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                />
+                <input
+                    type="email"
+                    placeholder="Confirmer mot de passe"
                     className="w-full mb-4 p-2 border rounded text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                 />
 
-                <input
-                    type="password"
-                    placeholder="Mot de passe"
-                    className="w-full mb-4 p-2 border rounded text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-                <div className="text-sm mb-4 text-right">
-                    <Link href="/forgot-password" className="text-blue-600 hover:underline">
-                        Mot de passe oublié ?
-                    </Link>
-                </div>
-
                 <button
                     type="submit"
                     className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
                 >
-                    Se connecter
+                    Réinitialiser mon mot de passe
                 </button>
             </form>
         </div>
