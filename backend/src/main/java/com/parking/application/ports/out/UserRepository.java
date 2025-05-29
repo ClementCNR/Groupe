@@ -1,4 +1,4 @@
-package com.parking.domain.ports.out;
+package com.parking.application.ports.out;
 
 import java.util.List;
 import java.util.Optional;

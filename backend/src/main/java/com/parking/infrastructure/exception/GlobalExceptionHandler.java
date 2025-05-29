@@ -21,6 +21,7 @@ public class GlobalExceptionHandler {
         body.put("status", HttpStatus.NOT_FOUND.value());
         body.put("error", "Not Found");
         body.put("message", ex.getMessage());
+        body.put("code", "USER_NOT_FOUND");
         
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
@@ -32,6 +33,7 @@ public class GlobalExceptionHandler {
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("error", "Bad Request");
         body.put("message", ex.getMessage());
+        body.put("code", "INVALID_USER_DATA");
         
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
@@ -43,6 +45,7 @@ public class GlobalExceptionHandler {
         body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
         body.put("error", "Internal Server Error");
         body.put("message", "Une erreur inattendue s'est produite");
+        body.put("code", "INTERNAL_ERROR");
         
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }

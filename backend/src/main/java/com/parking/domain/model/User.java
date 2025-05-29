@@ -7,19 +7,27 @@ public class User {
 
     private Long id;
     private String email;
+    private String password;
     private String firstName;
     private String lastName;
     private UserRole role;
-    private boolean hasElectricVehicle;
 
     public User() {}
 
-    public User(Long id, String email, String firstName, String lastName, UserRole role, boolean hasElectricVehicle) {
+    public User(Long id, String email, String password, String firstName, String lastName, UserRole role) {
+        this.id = id;
+        this.email = email;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.role = role;
+    }
+
+    public User(Long id, String email, String firstName, String lastName, UserRole role) {
         this.id = id;
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.role = role;
-        this.hasElectricVehicle = hasElectricVehicle;
     }
 }

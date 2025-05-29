@@ -1,8 +1,8 @@
 package com.parking.application.services;
 
+import com.parking.application.ports.in.UserManagementUseCase;
+import com.parking.application.ports.out.UserRepository;
 import com.parking.domain.model.User;
-import com.parking.domain.ports.in.UserManagementUseCase;
-import com.parking.domain.ports.out.UserRepository;
 
 import org.springframework.stereotype.Service;
 import java.util.List;

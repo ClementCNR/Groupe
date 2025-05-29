@@ -1,7 +1,7 @@
 package com.parking.infrastructure.adapters.out.persistence;
 
+import com.parking.application.ports.out.UserRepository;
 import com.parking.domain.model.User;
-import com.parking.domain.ports.out.UserRepository;
 import com.parking.infrastructure.adapters.out.persistence.entity.UserEntity;
 
 import org.springframework.stereotype.Component;
@@ -41,10 +41,10 @@ public class UserRepositoryAdapter implements UserRepository {
         return new User(
             entity.getId(),
             entity.getEmail(),
+            entity.getPassword(),
             entity.getFirstName(),
             entity.getLastName(),
-            entity.getRole(),
-            entity.isHasElectricVehicle()
+            entity.getRole()
         );
     }
 } 
