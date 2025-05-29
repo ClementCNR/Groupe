@@ -19,7 +19,6 @@ public class UserMapper {
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
         dto.setRole(user.getRole());
-        dto.setHasElectricVehicle(user.isHasElectricVehicle());
         return dto;
     }
 
@@ -33,8 +32,7 @@ public class UserMapper {
             dto.getEmail(),
             dto.getFirstName(),
             dto.getLastName(),
-            dto.getRole(),
-            dto.isHasElectricVehicle()
+            dto.getRole()
         );
     }
 } 

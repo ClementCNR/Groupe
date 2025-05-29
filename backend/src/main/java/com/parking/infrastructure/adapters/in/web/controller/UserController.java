@@ -1,7 +1,7 @@
-package com.parking.infrastructure.adapters.in.web;
+package com.parking.infrastructure.adapters.in.web.controller;
 
+import com.parking.application.ports.in.UserManagementUseCase;
 import com.parking.domain.exception.UserNotFoundException;
-import com.parking.domain.ports.in.UserManagementUseCase;
 import com.parking.infrastructure.adapters.in.dto.UserDTO;
 import com.parking.infrastructure.adapters.in.mapper.UserMapper;
 import io.swagger.v3.oas.annotations.Operation;
