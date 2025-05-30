@@ -113,15 +113,16 @@ export default function ReservationPage() {
                     ))}
                 </select>
 
-                <label className="flex items-center mb-4 text-black">
-                    <input
-                        type="checkbox"
-                        checked={requiresElectricity}
-                        onChange={(e) => setRequiresElectricity(e.target.checked)}
-                        className="mr-2"
-                    />
-                    Besoin d'une prise électrique (A / F uniquement)
-                </label>
+           <label className="flex items-center mb-4 text-black">
+    <input
+        type="checkbox"
+        checked={requiresElectricity}
+        onChange={(e) => setRequiresElectricity(e.target.checked)}
+        className="mr-2"
+    />
+    Besoin d&rsquo;une prise électrique (A / F uniquement)
+</label>
+
 
                 <button
                     type="submit"
