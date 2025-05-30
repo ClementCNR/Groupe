@@ -9,6 +9,7 @@ import com.parking.domain.model.ReservationStatus;
 import com.parking.infrastructure.exception.InvalidCheckInPeriodException;
 import com.parking.infrastructure.exception.UnauthorizedCheckInException;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -171,5 +172,22 @@ public class ReservationManagementService implements ReservationManagementUseCas
             }
         }
         return days;
+    }
+    @Scheduled(cron = "0 0 11 * * *")
+    public void autoExpireUnconfirmedReservations() {
+        LocalDate today = LocalDate.now();
+
+        List<Reservation> reservationsToExpire = reservationRepository.findAll().stream()
+                .filter(r -> r.getStatus() == ReservationStatus.RESERVED)
+                .filter(r -> today.equals(r.getStartDate()))
+                .filter(r -> r.getCheckInTime() == null)
+                .toList();
+
+        for (Reservation reservation : reservationsToExpire) {
+            reservation.setStatus(ReservationStatus.EXPIRED);
+            reservation.setUpdatedAt(LocalDateTime.now());
+            reservationRepository.save(reservation);
+        }
+
     }
 } 
