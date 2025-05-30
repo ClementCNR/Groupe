@@ -1,16 +1,23 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
 
 export default function LoginPage() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const { login, error } = useAuth();
+    const router = useRouter();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Tentative de connexion :", email, password);
-        // 🚧 Appel API login ici plus tard
+        try {
+            await login(email, password);
+            router.push('/dashboard');
+        } catch (err) {
+            console.error('Erreur lors de la connexion :', err);
+        }
     };
 
     return (
@@ -40,11 +47,6 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                 />
-                <div className="text-sm mb-4 text-right">
-                    <Link href="/forgot-password" className="text-blue-600 hover:underline">
-                        Mot de passe oublié ?
-                    </Link>
-                </div>
 
                 <button
                     type="submit"
@@ -52,6 +54,8 @@ export default function LoginPage() {
                 >
                     Se connecter
                 </button>
+
+                {error && <p className="text-red-600 text-center mt-2">{error}</p>}
             </form>
         </div>
     );

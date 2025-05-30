@@ -1,7 +1,22 @@
-export default function LoginPage() {
-    return (
-        <div className="flex items-center justify-center h-screen">
-            <h1 className="text-3xl font-bold text-blue-600">Home Page</h1>
-        </div>
-    );
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../context/AuthContext';
+
+export default function Home() {
+    const { user } = useAuth();
+    const router = useRouter();
+    useEffect(() => {
+        if (!user) {
+            router.push('/login');
+        } else {
+            if (user.role === 'EMPLOYEE') router.push('/dashboard/employee');
+            else if (user.role === 'SECRETARY') router.push('/dashboard/secretary');
+            else if (user.role === 'MANAGER') router.push('/dashboard/manager');
+        }
+    }, [user, router]); 
+
+
+    return null; // Pas de contenu ici, on redirige automatiquement
 }

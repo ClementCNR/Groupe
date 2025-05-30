@@ -1,37 +1,23 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
-    const [role, setRole] = useState(null);
-
-    useEffect(() => {
-        // 🚧 Simulation du rôle (à remplacer par une vraie auth plus tard)
-        // Change ici pour tester : "employee", "manager", "secretary"
-        setRole("employee");
-    }, []);
+    const { user, logout } = useAuth();
 
     return (
-        <nav className="bg-gray-800 text-white p-4 flex gap-4">
-            <Link href="/" className="hover:text-gray-300">Accueil</Link>
-
-            {role === "employee" && (
-                <Link href="/reservations" className="hover:text-gray-300">Réserver</Link>
-            )}
-
-            {role === "manager" && (
-                <>
-                    <Link href="/dashboard" className="hover:text-gray-300">Dashboard</Link>
-                    <Link href="/reservations" className="hover:text-gray-300">Réserver</Link>
-                </>
-            )}
-
-            {role === "secretary" && (
-                <Link href="/admin" className="hover:text-gray-300">Admin</Link>
-            )}
-
-            <Link href="/login" className="hover:text-gray-300">Login</Link>
+        <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
+            <h1 className="font-bold text-lg">Parking App</h1>
+            <div className="flex space-x-4">
+                {user?.role === 'SECRETARY' && (
+                    <button className="bg-white text-blue-600 px-2 py-1 rounded">
+                        Administration
+                    </button>
+                )}
+                <button onClick={logout} className="bg-white text-blue-600 px-2 py-1 rounded">
+                    Se déconnecter
+                </button>
+            </div>
         </nav>
     );
 }
