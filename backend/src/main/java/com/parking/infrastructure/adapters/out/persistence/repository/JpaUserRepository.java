@@ -1,4 +1,4 @@
-package com.parking.infrastructure.adapters.out.persistence;
+package com.parking.infrastructure.adapters.out.persistence.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
