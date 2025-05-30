@@ -56,7 +56,9 @@ public class ReservationController {
     @Operation(summary = "Lister toutes les réservations", description = "Retourne la liste de toutes les réservations (admin/secrétaire)")
     public ResponseEntity<List<Reservation>> getAllReservations() {
         return ResponseEntity.ok(reservationUseCase.getAllReservations());
-    }@PatchMapping("/{id}")
+    }
+    
+    @PatchMapping("/{id}")
     @PreAuthorize("hasRole('SECRETARY')")
     @Operation(summary = "Modifier une réservation (admin/secrétaire)", description = "Permet de modifier une réservation existante.")
     public ResponseEntity<ReservationResponseDTO> updateReservation(
