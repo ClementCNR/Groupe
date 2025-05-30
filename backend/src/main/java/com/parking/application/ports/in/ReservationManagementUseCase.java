@@ -11,7 +11,7 @@ public interface ReservationManagementUseCase {
     List<Reservation> getUserReservations(String userId);
     List<Reservation> getAllReservations();
 
-    Reservation updateReservationByAdmin(Long id, Reservation reservation);
+    Reservation updateReservationBySecretary(Long id, Reservation reservation);
     Reservation getReservationById(Long id);
 
 }

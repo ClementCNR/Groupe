@@ -6,8 +6,8 @@ import com.parking.application.ports.out.ReservationRepository;
 import com.parking.domain.model.ParkingSpot;
 import com.parking.domain.model.Reservation;
 import com.parking.domain.model.ReservationStatus;
-import com.parking.infrastructure.exception.InvalidCheckInPeriodException;
-import com.parking.infrastructure.exception.UnauthorizedCheckInException;
+import com.parking.domain.exception.InvalidCheckInPeriodException;
+import com.parking.domain.exception.UnauthorizedCheckInException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -76,9 +76,18 @@ public class ReservationManagementService implements ReservationManagementUseCas
     }
 
     @Override
-    public Reservation updateReservationByAdmin(Long id, Reservation updated) {
+    public Reservation updateReservationBySecretary(Long id, Reservation updated) {
         Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Impossible de mettre à jour : réservation non trouvée (id = " + id + ")"));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Impossible de mettre à jour : réservation non trouvée (id = " + id + ")"));
+        LocalDate today = LocalDate.now();
+
+        if (updated.getStartDate().isBefore(today)) {
+            throw new InvalidReservationDatesException("La date de début doit être aujourd'hui ou plus tard.");
+        }
+        if (updated.getEndDate().isBefore(updated.getStartDate())) {
+            throw new InvalidReservationDatesException("La date de fin doit être après la date de début.");
+        }
 
         reservation.setParkingSpotId(updated.getParkingSpotId());
         reservation.setStartDate(updated.getStartDate());
@@ -93,7 +102,13 @@ public class ReservationManagementService implements ReservationManagementUseCas
     public void checkIn(Long reservationId, String userId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new EntityNotFoundException("Réservation non trouvée pour l'id : " + reservationId));
-
+        LocalDate today = LocalDate.now();
+        if (reservation.getStartDate().isBefore(today)) {
+            throw new InvalidReservationDatesException("La date de début doit être aujourd'hui ou plus tard.");
+        }
+        if (reservation.getEndDate().isBefore(reservation.getStartDate())) {
+            throw new InvalidReservationDatesException("La date de fin doit être après la date de début.");
+        }
         if (!reservation.getUserId().equals(userId)) {
             throw new SecurityException("Vous n'êtes pas autorisé à faire le check-in de cette réservation.");
         }
@@ -101,7 +116,6 @@ public class ReservationManagementService implements ReservationManagementUseCas
         if (!reservation.getUserId().equals(userId)) {
             throw new UnauthorizedCheckInException("Vous n'êtes pas autorisé à faire le check-in de cette réservation.");
         }
-        LocalDate today = LocalDate.now();
 
         if (today.isBefore(reservation.getStartDate()) || today.isAfter(reservation.getEndDate())) {
             throw new InvalidCheckInPeriodException("Le check-in est autorisé uniquement pendant la période de réservation.");

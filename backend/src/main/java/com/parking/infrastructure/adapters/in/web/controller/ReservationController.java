@@ -83,7 +83,7 @@ public class ReservationController {
         existingReservation.setCheckInTime(request.getCheckInTime());
         existingReservation.setUpdatedAt(LocalDateTime.now());
 
-        Reservation updated = reservationUseCase.updateReservationByAdmin(id, existingReservation);
+        Reservation updated = reservationUseCase.updateReservationBySecretary(id, existingReservation);
         return ResponseEntity.ok(ReservationMapper.toDTO(updated));
     }
 

@@ -1,12 +1,6 @@
 package com.parking.infrastructure.exception;
 
-import com.parking.domain.exception.UserNotFoundException;
-import com.parking.domain.exception.InvalidUserDataException;
-import com.parking.domain.exception.InvalidReservationDatesException;
-import com.parking.domain.exception.ReservationDurationExceededException;
-import com.parking.domain.exception.ParkingSpotUnavailableException;
-import com.parking.domain.exception.ParkingSpotNotFoundException;
-import com.parking.domain.exception.InvalidParkingSpotTypeException;
+import com.parking.domain.exception.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +8,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
