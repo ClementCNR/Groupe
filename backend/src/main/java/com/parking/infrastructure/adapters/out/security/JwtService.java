@@ -10,26 +10,30 @@ import io.jsonwebtoken.Claims;
 import java.util.function.Function;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
-import java.util.HashMap;
 import com.parking.application.ports.out.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.data.redis.core.RedisTemplate;
+import java.util.concurrent.TimeUnit;
 
 
 @Service
 public class JwtService implements TokenService{
 
-    @Value("${application.security.jwt.secret-key}")
-    private String secretKey;
-    private final Key signInKey;
-    @Value("${application.security.jwt.expiration}")
+    private static final String BLACKLIST_PREFIX = "blacklist:";
+    private final Key key;
+    private final RedisTemplate<String, String> redisTemplate;
+
+    @Value("${jwt.expiration}")
     private long jwtExpiration;
+
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
 
     @Autowired
-    public JwtService(Key signInKey) {
-        this.signInKey = signInKey;
+    public JwtService(@Value("${jwt.secret}") String secret, RedisTemplate<String, String> redisTemplate) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        this.redisTemplate = redisTemplate;
     }
 
     public String extractUsername(String token) {
@@ -42,11 +46,16 @@ public class JwtService implements TokenService{
     }
 
     public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+        return generateToken(userDetails.getUsername());
     }
 
-    public String generateToken(String email) {
-        return buildToken(new HashMap<>(), email, jwtExpiration);
+    public String generateToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
@@ -54,7 +63,12 @@ public class JwtService implements TokenService{
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails, refreshExpiration);
+        return Jwts.builder()
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
@@ -64,18 +78,7 @@ public class JwtService implements TokenService{
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(signInKey, SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    private String buildToken(Map<String, Object> extraClaims, String email, long expiration) {
-        return Jwts
-                .builder()
-                .setClaims(extraClaims)
-                .setSubject(email)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(signInKey, SignatureAlgorithm.HS256)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -96,13 +99,31 @@ public class JwtService implements TokenService{
     private Claims extractAllClaims(String token) {
         return Jwts
                 .parserBuilder()
-                .setSigningKey(signInKey)
+                .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
-    public Key getSignInKey() {
-        byte[] keyBytes = secretKey.getBytes();
-        return Keys.hmacShaKeyFor(keyBytes);
+
+    public boolean validateToken(String token) {
+        try {
+            if (isTokenBlacklisted(token)) {
+                return false;
+            }
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void invalidateToken(String token) {
+        String key = BLACKLIST_PREFIX + token;
+        redisTemplate.opsForValue().set(key, "invalidated", jwtExpiration, TimeUnit.MILLISECONDS);
+    }
+
+    private boolean isTokenBlacklisted(String token) {
+        String key = BLACKLIST_PREFIX + token;
+        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
 } 

@@ -3,6 +3,7 @@ package com.parking.infrastructure.adapters.out.persistence;
 import com.parking.application.ports.out.UserRepository;
 import com.parking.domain.model.User;
 import com.parking.infrastructure.adapters.out.persistence.entity.UserEntity;
+import com.parking.infrastructure.adapters.out.persistence.repository.JpaUserRepository;
 
 import org.springframework.stereotype.Component;
 import java.util.List;
