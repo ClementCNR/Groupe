@@ -1,4 +1,4 @@
-package com.parking.infrastructure.exception;
+package com.parking.domain.exception;
 
 public class UnauthorizedCheckInException extends RuntimeException {
     public UnauthorizedCheckInException(String message) {
