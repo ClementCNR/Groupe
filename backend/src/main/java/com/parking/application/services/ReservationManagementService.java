@@ -6,6 +6,9 @@ import com.parking.application.ports.out.ReservationRepository;
 import com.parking.domain.model.ParkingSpot;
 import com.parking.domain.model.Reservation;
 import com.parking.domain.model.ReservationStatus;
+import com.parking.infrastructure.exception.InvalidCheckInPeriodException;
+import com.parking.infrastructure.exception.UnauthorizedCheckInException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -89,12 +92,66 @@ public class ReservationManagementService implements ReservationManagementUseCas
 
     @Override
     public void cancelReservation(Long reservationId, String userId) {
-     
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new EntityNotFoundException("Réservation non trouvée pour l'id : " + reservationId));
+
+        if (!reservation.getUserId().equals(userId)) {
+            throw new SecurityException("Vous n'avez pas la permission d'annuler cette réservation.");
+        }
+
+        if (reservation.getStatus() != ReservationStatus.RESERVED) {
+            throw new IllegalStateException("Seules les réservations au statut 'RESERVED' peuvent être annulées.");
+        }
+
+        reservation.setStatus(ReservationStatus.CANCELLED);
+        reservation.setUpdatedAt(LocalDateTime.now());
+
+        reservationRepository.save(reservation);
+    }
+
+    @Override
+    public Reservation getReservationById(Long id) {
+        return reservationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Réservation non trouvée pour l'id : " + id));
+    }
+
+    @Override
+    public Reservation updateReservationByAdmin(Long id, Reservation updated) {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Impossible de mettre à jour : réservation non trouvée (id = " + id + ")"));
+
+        reservation.setParkingSpotId(updated.getParkingSpotId());
+        reservation.setStartDate(updated.getStartDate());
+        reservation.setEndDate(updated.getEndDate());
+        reservation.setStatus(updated.getStatus());
+        reservation.setCheckInTime(updated.getCheckInTime());
+
+        return reservationRepository.save(reservation);
     }
 
     @Override
     public void checkIn(Long reservationId, String userId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new EntityNotFoundException("Réservation non trouvée pour l'id : " + reservationId));
 
+        if (!reservation.getUserId().equals(userId)) {
+            throw new SecurityException("Vous n'êtes pas autorisé à faire le check-in de cette réservation.");
+        }
+
+        if (!reservation.getUserId().equals(userId)) {
+            throw new UnauthorizedCheckInException("Vous n'êtes pas autorisé à faire le check-in de cette réservation.");
+        }
+        LocalDate today = LocalDate.now();
+
+        if (today.isBefore(reservation.getStartDate()) || today.isAfter(reservation.getEndDate())) {
+            throw new InvalidCheckInPeriodException("Le check-in est autorisé uniquement pendant la période de réservation.");
+        }
+
+        reservation.setStatus(ReservationStatus.CHECKED_IN);
+        reservation.setCheckInTime(LocalDateTime.now());
+        reservation.setUpdatedAt(LocalDateTime.now());
+
+        reservationRepository.save(reservation);
     }
 
     @Override
