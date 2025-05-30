@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface ReservationManagementUseCase {
-    Reservation createReservation(String userId, String parkingSpotId, LocalDate startDate, LocalDate endDate);
+    Reservation createReservation(String userId, String parkingSpotId, LocalDate startDate, LocalDate endDate, boolean requiresElectricity);
     void cancelReservation(Long reservationId, String userId);
     void checkIn(Long reservationId, String userId);
     List<Reservation> getUserReservations(String userId);
