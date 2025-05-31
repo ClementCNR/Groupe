@@ -10,4 +10,8 @@ public interface ReservationManagementUseCase {
     void checkIn(Long reservationId, String userId);
     List<Reservation> getUserReservations(String userId);
     List<Reservation> getAllReservations();
-} 
+
+    Reservation updateReservationBySecretary(Long id, Reservation reservation);
+    Reservation getReservationById(Long id);
+
+}

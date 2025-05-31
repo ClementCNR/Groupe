@@ -9,10 +9,10 @@ services:
       - postgres
       - redis
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/parking
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
-      - SPRING_DATA_REDIS_HOST=redis
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/parking
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATA_REDIS_HOST: redis
 
   frontend:
     build: ./frontend
@@ -24,9 +24,9 @@ services:
   postgres:
     image: postgres:latest
     environment:
-      - POSTGRES_DB=parking
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      POSTGRES_DB: parking
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:

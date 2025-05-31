@@ -1,18 +1,20 @@
-import "./globals.css";
-import Navbar from "../components/Navbar";
+import './globals.css';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 export const metadata = {
-  title: "Parking Reservation System",
-  description: "Réservation de places de parking en entreprise",
+    title: 'Parking Reservation System',
+    description: 'Réservation de places de parking en entreprise',
 };
 
 export default function RootLayout({ children }) {
-  return (
+    return (
       <html lang="fr">
-      <body>
-      <Navbar />
-      <main>{children}</main>
-      </body>
+        <body>
+          {children}
+          <ToastContainer position="top-center" />
+        </body>
       </html>
-  );
-}
+    );
+  }
