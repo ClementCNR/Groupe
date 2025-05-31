@@ -5,37 +5,39 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { authService } from '@/services/authService';
 import { useReservation } from '@/hooks/useReservation';
 import Navbar from '@/components/Navbar';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function CheckInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const user = authService.getUser();
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const { reservations, loading, error, loadReservations, checkIn } = useReservation();
   
   const [selectedReservation, setSelectedReservation] = useState<string>('');
-  const [spotCode, setSpotCode] = useState('');
   const [checkInLoading, setCheckInLoading] = useState(false);
   const [checkInError, setCheckInError] = useState('');
   const [checkInSuccess, setCheckInSuccess] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    const spotFromQR = searchParams.get('spot');
-    if (spotFromQR) {
-      setSpotCode(spotFromQR);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (!user) {
+    const u = authService.getUser();
+    if (!u) {
       router.push('/login');
     } else {
+      setCurrentUser(u);
+    }
+  }, []);
+  useEffect(() => {
+    if (currentUser) {
       loadReservations();
     }
-  }, [user, router, loadReservations]);
+  }, [currentUser]);
+  useEffect(() => { setIsClient(true); }, []);
 
   const todayReservations = reservations.filter(reservation => {
     const today = new Date().toISOString().split('T')[0];
-    return reservation.status === 'PENDING' && 
+    return String(reservation.status) === 'RESERVED' && 
            new Date(reservation.startDate) <= new Date(today) &&
            new Date(reservation.endDate) >= new Date(today);
   });
@@ -45,28 +47,12 @@ export default function CheckInPage() {
     setCheckInLoading(true);
     setCheckInError('');
     setCheckInSuccess(false);
-
     try {
-      let reservationId: number;
-      
-      if (spotCode) {
-        const reservation = todayReservations.find(r => r.parkingSpotId === spotCode);
-        if (!reservation) {
-          throw new Error('Aucune réservation trouvée pour cette place aujourd&apos;hui');
-        }
-        reservationId = reservation.id;
-      } else if (selectedReservation) {
-        reservationId = parseInt(selectedReservation);
-      } else {
-        throw new Error('Veuillez sélectionner une réservation ou scanner un QR code');
-      }
-
-      await checkIn(reservationId);
+      if (!selectedReservation) throw new Error('Veuillez sélectionner une réservation');
+      await checkIn(Number(selectedReservation));
       setCheckInSuccess(true);
-      
-      setTimeout(() => {
-        router.push('/reservations/my-active');
-      }, 2000);
+      toast.success('Check-in effectué avec succès !');
+      router.push('/reservations/my-active');
     } catch (err: any) {
       setCheckInError(err.message || 'Erreur lors du check-in');
     } finally {
@@ -74,7 +60,7 @@ export default function CheckInPage() {
     }
   };
 
-  if (!user) return null;
+  if (!currentUser) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -84,26 +70,7 @@ export default function CheckInPage() {
         
         <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto">
           <form onSubmit={handleCheckIn} className="space-y-6">
-            {/* Check-in par QR Code */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Code de la place (QR Code)
-              </label>
-              <input
-                type="text"
-                value={spotCode}
-                onChange={(e) => setSpotCode(e.target.value.toUpperCase())}
-                placeholder="Ex: A01, B05, F10..."
-                className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Scannez le QR code ou entrez le numéro de la place
-              </p>
-            </div>
-
-            <div className="text-center text-gray-500">OU</div>
-
-            {/* Check-in par sélection de réservation */}
+            {/* Sélection de la réservation */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Sélectionnez votre réservation d&apos;aujourd&apos;hui
@@ -117,12 +84,12 @@ export default function CheckInPage() {
                   value={selectedReservation}
                   onChange={(e) => setSelectedReservation(e.target.value)}
                   className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!!spotCode}
+                  disabled={checkInLoading || checkInSuccess}
                 >
                   <option value="">Sélectionnez une réservation</option>
                   {todayReservations.map((reservation) => (
                     <option key={reservation.id} value={reservation.id}>
-                      Place {reservation.parkingSpotId} - {new Date(reservation.startDate).toLocaleDateString()} au {new Date(reservation.endDate).toLocaleDateString()}
+                      Place {reservation.parkingSpotId} - {reservation.startDate.slice(0, 10)} au {reservation.endDate.slice(0, 10)}
                     </option>
                   ))}
                 </select>
@@ -146,9 +113,9 @@ export default function CheckInPage() {
             <div className="flex gap-4">
               <button
                 type="submit"
-                disabled={checkInLoading || (!spotCode && !selectedReservation) || checkInSuccess}
+                disabled={checkInLoading || !selectedReservation || checkInSuccess}
                 className={`flex-1 py-3 px-4 rounded-md text-white ${
-                  checkInLoading || (!spotCode && !selectedReservation) || checkInSuccess
+                  checkInLoading || !selectedReservation || checkInSuccess
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-blue-600 hover:bg-blue-700'
                 }`}
@@ -176,6 +143,7 @@ export default function CheckInPage() {
           </ul>
         </div>
       </main>
+      <ToastContainer position="top-center" />
     </div>
   );
 } 

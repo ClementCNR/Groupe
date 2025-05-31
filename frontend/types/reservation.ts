@@ -17,7 +17,7 @@ export interface Reservation {
   updatedAt: string;
 }
 
-export type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
+export type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW' | 'CHECKED_IN';
 
 export interface ReservationResponse {
   id: number;

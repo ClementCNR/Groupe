@@ -5,29 +5,49 @@ import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
 import { useReservation } from '@/hooks/useReservation';
 import Navbar from '@/components/Navbar';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function MyActiveReservationsPage() {
   const router = useRouter();
-  const user = authService.getUser();
+  const [user, setUser] = React.useState(null);
   const { reservations, loading, error, loadReservations, cancelReservation, checkIn, userRole } = useReservation();
+  const [cancellingId, setCancellingId] = React.useState<number | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = React.useState(false);
+  const [reservationToCancel, setReservationToCancel] = React.useState<number | null>(null);
 
   useEffect(() => {
+    setUser(authService.getUser());
+  }, []);
+
+  useEffect(() => {
+    if (user === null) return;
     if (!user) {
       router.push('/login');
     } else {
       loadReservations();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+  }, [user]);
 
-  const handleCancel = async (id: number) => {
-    if (confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
-      try {
-        await cancelReservation(id);
-        alert('Réservation annulée avec succès');
-      } catch (err) {
-        alert('Erreur lors de l\'annulation');
-      }
+  const handleCancel = (id: number) => {
+    setReservationToCancel(id);
+    setShowConfirmModal(true);
+  };
+
+  const confirmCancel = async () => {
+    if (!reservationToCancel) return;
+    setCancellingId(reservationToCancel);
+    setShowConfirmModal(false);
+    try {
+      await cancelReservation(reservationToCancel);
+      toast.success('Réservation annulée avec succès');
+      loadReservations();
+    } catch (err) {
+      toast.error('Erreur lors de l\'annulation');
+    } finally {
+      setCancellingId(null);
+      setReservationToCancel(null);
     }
   };
 
@@ -51,6 +71,7 @@ export default function MyActiveReservationsPage() {
     return badges[status] || 'bg-gray-100 text-gray-800';
   };
 
+  if (user === null) return null;
   if (!user) return null;
 
   return (
@@ -121,7 +142,7 @@ export default function MyActiveReservationsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {new Date(reservation.startDate).toLocaleDateString()} - {new Date(reservation.endDate).toLocaleDateString()}
+                        {reservation.startDate.slice(0, 10)} - {reservation.endDate.slice(0, 10)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -135,21 +156,17 @@ export default function MyActiveReservationsPage() {
                       </td>
                     )}
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {reservation.status === 'PENDING' && (
-                        <>
-                          <button
-                            onClick={() => handleCheckIn(reservation.id)}
-                            className="text-green-600 hover:text-green-900 mr-4"
-                          >
-                            Check-in
-                          </button>
-                          <button
-                            onClick={() => handleCancel(reservation.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Annuler
-                          </button>
-                        </>
+                      {['PENDING', 'RESERVED'].includes(reservation.status) && (
+                        <button
+                          onClick={() => handleCancel(reservation.id)}
+                          className={`inline-flex items-center gap-2 px-4 py-2 rounded font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors duration-150 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed`}
+                          disabled={cancellingId === reservation.id}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Annuler
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -159,6 +176,30 @@ export default function MyActiveReservationsPage() {
           </div>
         )}
       </main>
+      <ToastContainer position="top-center" />
+      {/* Modal de confirmation d'annulation */}
+      {showConfirmModal && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center animate-fade-in">
+            <h2 className="text-xl font-bold mb-4">Annuler la réservation ?</h2>
+            <p className="mb-6 text-gray-700">Êtes-vous sûr de vouloir annuler cette réservation ? Cette action est irréversible.</p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 font-semibold"
+              >
+                Retour
+              </button>
+              <button
+                onClick={confirmCancel}
+                className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600 font-semibold shadow"
+              >
+                Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
