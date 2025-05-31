@@ -27,7 +27,15 @@ export const reservationService = {
     await api.delete(`/reservations/${id}/cancel`);
   },
 
+  async cancelReservationBySecretary(id: number, userId: string): Promise<void> {
+    await api.delete(`/reservations/${id}/cancel/by-secretary?userId=${userId}`);
+  },
+
   async checkIn(id: number): Promise<void> {
     await api.patch(`/reservations/${id}/checkin`);
+  },
+
+  async checkInBySecretary(id: number, userId: string): Promise<void> {
+    await api.patch(`/reservations/${id}/checkin/by-secretary?userId=${userId}`);
   }
 }; 

@@ -12,7 +12,15 @@ export default function CheckInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const { reservations, loading, error, loadReservations, checkIn } = useReservation();
+  const { 
+    reservations, 
+    loading, 
+    error, 
+    loadReservations, 
+    checkIn,
+    checkInBySecretary,
+    userRole 
+  } = useReservation();
   
   const [selectedReservation, setSelectedReservation] = useState<string>('');
   const [checkInLoading, setCheckInLoading] = useState(false);
@@ -49,7 +57,16 @@ export default function CheckInPage() {
     setCheckInSuccess(false);
     try {
       if (!selectedReservation) throw new Error('Veuillez sélectionner une réservation');
-      await checkIn(Number(selectedReservation));
+      
+      const selectedRes = todayReservations.find(r => r.id === Number(selectedReservation));
+      if (!selectedRes) throw new Error('Réservation non trouvée');
+
+      if (userRole === 'SECRETARY') {
+        await checkInBySecretary(Number(selectedReservation), selectedRes.userId.toString());
+      } else {
+        await checkIn(Number(selectedReservation));
+      }
+      
       setCheckInSuccess(true);
       toast.success('Check-in effectué avec succès !');
       router.push('/reservations/my-active');
@@ -90,6 +107,7 @@ export default function CheckInPage() {
                   {todayReservations.map((reservation) => (
                     <option key={reservation.id} value={reservation.id}>
                       Place {reservation.parkingSpotId} - {reservation.startDate.slice(0, 10)} au {reservation.endDate.slice(0, 10)}
+                      {userRole === 'SECRETARY' && ` - Utilisateur: ${reservation.userId}`}
                     </option>
                   ))}
                 </select>

@@ -87,8 +87,6 @@ public class ReservationController {
         return ResponseEntity.ok(ReservationMapper.toDTO(updated));
     }
 
-
-
     @DeleteMapping("/{id}/cancel")
     @Operation(summary = "Annuler une réservation", description = "Permet à l'utilisateur connecté d'annuler une réservation réservée.")
     public ResponseEntity<Void> cancelReservation(@PathVariable Long id, Principal principal) {
@@ -102,6 +100,22 @@ public class ReservationController {
     public ResponseEntity<Void> checkInReservation(@PathVariable Long id, Principal principal) {
         String name = principal.getName();
         reservationUseCase.checkIn(id, name);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/checkin/by-secretary")
+    @PreAuthorize("hasRole('SECRETARY')")
+    @Operation(summary = "Faire le check-in d'une réservation pour un utilisateur (secrétaire)", description = "Permet à une secrétaire de valider la présence d'un utilisateur sur une réservation.")
+    public ResponseEntity<Void> checkInReservationBySecretary(@PathVariable Long id, @RequestParam String userId) {
+        reservationUseCase.checkIn(id, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}/cancel/by-secretary")
+    @PreAuthorize("hasRole('SECRETARY')")
+    @Operation(summary = "Annuler une réservation pour un utilisateur (secrétaire)", description = "Permet à une secrétaire d'annuler la réservation de n'importe quel utilisateur.")
+    public ResponseEntity<Void> cancelReservationBySecretary(@PathVariable Long id, @RequestParam String userId) {
+        reservationUseCase.cancelReservation(id, userId);
         return ResponseEntity.noContent().build();
     }
 }

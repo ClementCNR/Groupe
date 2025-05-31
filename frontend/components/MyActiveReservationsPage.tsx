@@ -11,7 +11,16 @@ import 'react-toastify/dist/ReactToastify.css';
 export default function MyActiveReservationsPage() {
   const router = useRouter();
   const [user, setUser] = React.useState(null);
-  const { reservations, loading, error, loadReservations, cancelReservation, checkIn, userRole } = useReservation();
+  const { 
+    reservations, 
+    loading, 
+    error, 
+    loadReservations, 
+    cancelReservation, 
+    cancelReservationBySecretary,
+    checkIn, 
+    userRole 
+  } = useReservation();
   const [cancellingId, setCancellingId] = React.useState<number | null>(null);
   const [showConfirmModal, setShowConfirmModal] = React.useState(false);
   const [reservationToCancel, setReservationToCancel] = React.useState<number | null>(null);
@@ -40,7 +49,14 @@ export default function MyActiveReservationsPage() {
     setCancellingId(reservationToCancel);
     setShowConfirmModal(false);
     try {
-      await cancelReservation(reservationToCancel);
+      if (userRole === 'SECRETARY') {
+        const res = reservations.find(r => r.id === reservationToCancel);
+        if (res && res.userId) {
+          await cancelReservationBySecretary(reservationToCancel, res.userId.toString());
+        }
+      } else {
+        await cancelReservation(reservationToCancel);
+      }
       toast.success('Réservation annulée avec succès');
       loadReservations();
     } catch (err) {

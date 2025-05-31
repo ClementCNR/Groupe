@@ -68,6 +68,21 @@ export const useReservation = () => {
     }
   }, [loadReservations]);
 
+  // Annuler une réservation (pour les secrétaires)
+  const cancelReservationBySecretary = useCallback(async (id: number, userId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await reservationService.cancelReservationBySecretary(id, userId);
+      await loadReservations();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Erreur lors de l'annulation (secrétaire)");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [loadReservations]);
+
   // Check-in
   const checkIn = useCallback(async (id: number) => {
     setLoading(true);
@@ -83,6 +98,20 @@ export const useReservation = () => {
     }
   }, [loadReservations]);
 
+  const checkInBySecretary = useCallback(async (id: number, userId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await reservationService.checkInBySecretary(id, userId);
+      await loadReservations();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Erreur lors du check-in (secrétaire)');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [loadReservations]);
+
   return {
     loading,
     error,
@@ -92,6 +121,8 @@ export const useReservation = () => {
     createReservation,
     loadReservations,
     cancelReservation,
-    checkIn
+    cancelReservationBySecretary,
+    checkIn,
+    checkInBySecretary
   };
 }; 
