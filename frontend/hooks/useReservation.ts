@@ -112,6 +112,20 @@ export const useReservation = () => {
     }
   }, [loadReservations]);
 
+  const updateReservation = useCallback(async (id: number, data: any) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await reservationService.updateReservation(id, data);
+      await loadReservations();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Erreur lors de la modification');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [loadReservations]);
+
   return {
     loading,
     error,
@@ -123,6 +137,7 @@ export const useReservation = () => {
     cancelReservation,
     cancelReservationBySecretary,
     checkIn,
-    checkInBySecretary
+    checkInBySecretary,
+    updateReservation
   };
 }; 

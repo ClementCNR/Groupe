@@ -16,7 +16,6 @@ const generateMockSpots = (): ParkingSpot[] => {
         row: row,
         number: i,
         hasCharger: row === 'A' || row === 'F',
-        isAvailable: Math.random() > 0.3 // 70% de disponibilité aléatoire
       });
     }
   });

@@ -35,12 +35,12 @@ export default function CheckInPage() {
     } else {
       setCurrentUser(u);
     }
-  }, []);
+  }, [router]);
   useEffect(() => {
     if (currentUser) {
       loadReservations();
     }
-  }, [currentUser]);
+  }, [currentUser, loadReservations]);
   useEffect(() => { setIsClient(true); }, []);
 
   const todayReservations = reservations.filter(reservation => {

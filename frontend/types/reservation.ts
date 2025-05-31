@@ -29,9 +29,8 @@ export interface ReservationResponse {
 }
 
 export interface ParkingSpot {
-  id: string;
-  row: string;
-  number: number;
+  id: string;  // Format: "A01", "B02", etc.
+  row: string; // A, B, C, D, E, F
+  number: number; // 1-10
   hasCharger: boolean;
-  isAvailable: boolean;
 } 

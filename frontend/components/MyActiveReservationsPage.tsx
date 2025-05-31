@@ -4,6 +4,8 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
 import { useReservation } from '@/hooks/useReservation';
+import { reservationService } from '@/services/reservation';
+import { ParkingSpot, ReservationStatus } from '@/types/reservation';
 import Navbar from '@/components/Navbar';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -19,11 +21,21 @@ export default function MyActiveReservationsPage() {
     cancelReservation, 
     cancelReservationBySecretary,
     checkIn, 
-    userRole 
+    userRole,
+    updateReservation
   } = useReservation();
   const [cancellingId, setCancellingId] = React.useState<number | null>(null);
   const [showConfirmModal, setShowConfirmModal] = React.useState(false);
   const [reservationToCancel, setReservationToCancel] = React.useState<number | null>(null);
+  const [showEditModal, setShowEditModal] = React.useState(false);
+  const [reservationToEdit, setReservationToEdit] = React.useState<any>(null);
+  const [editFormData, setEditFormData] = React.useState({
+    startDate: '',
+    endDate: '',
+    parkingSpotId: '',
+    status: ''
+  });
+  const [parkingSpots, setParkingSpots] = React.useState<ParkingSpot[]>([]);
 
   useEffect(() => {
     setUser(authService.getUser());
@@ -35,9 +47,43 @@ export default function MyActiveReservationsPage() {
       router.push('/login');
     } else {
       loadReservations();
+      loadParkingSpots();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  const getAvailableParkingSpots = () => {
+    // Si on est en train de modifier une réservation, on inclut sa place actuelle
+    const currentReservationSpot = reservationToEdit?.parkingSpotId;
+    
+    // On récupère toutes les places réservées pour la période sélectionnée
+    const reservedSpots = reservations
+      .filter(res => 
+        res.id !== reservationToEdit?.id && // Exclure la réservation en cours de modification
+        res.status === 'RESERVED' as ReservationStatus && // Seulement les réservations actives
+        // Vérifier si la période se chevauche
+        (new Date(res.startDate) <= new Date(editFormData.endDate) &&
+         new Date(res.endDate) >= new Date(editFormData.startDate))
+      )
+      .map(res => res.parkingSpotId);
+
+    // Filtrer les places de parking
+    return parkingSpots.filter(spot => 
+      // Inclure la place actuelle de la réservation en cours de modification
+      spot.id === currentReservationSpot ||
+      // Ou inclure les places non réservées
+      !reservedSpots.includes(spot.id)
+    );
+  };
+
+  const loadParkingSpots = async () => {
+    try {
+      const spots = await reservationService.getParkingSpots();
+      setParkingSpots(spots);
+    } catch (err) {
+      toast.error('Erreur lors du chargement des places de parking');
+    }
+  };
 
   const handleCancel = (id: number) => {
     setReservationToCancel(id);
@@ -76,13 +122,50 @@ export default function MyActiveReservationsPage() {
     }
   };
 
+  const handleEdit = (reservation: any) => {
+    setReservationToEdit(reservation);
+    setEditFormData({
+      startDate: reservation.startDate.slice(0, 10),
+      endDate: reservation.endDate.slice(0, 10),
+      parkingSpotId: reservation.parkingSpotId,
+      status: reservation.status
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startDate = new Date(editFormData.startDate);
+      const endDate = new Date(editFormData.endDate);
+
+      if (startDate < today) {
+        toast.error('La date de début doit être aujourd\'hui ou plus tard');
+        return;
+      }
+
+      if (endDate < startDate) {
+        toast.error('La date de fin doit être après la date de début');
+        return;
+      }
+
+      await updateReservation(reservationToEdit.id, editFormData);
+      toast.success('Réservation modifiée avec succès');
+      setShowEditModal(false);
+      loadReservations();
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la modification');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const badges = {
-      PENDING: 'bg-yellow-100 text-yellow-800',
-      CONFIRMED: 'bg-green-100 text-green-800',
+      RESERVED: 'bg-green-100 text-green-800',
+      CHECKED_IN: 'bg-blue-100 text-blue-800',
       CANCELLED: 'bg-red-100 text-red-800',
-      COMPLETED: 'bg-gray-100 text-gray-800',
-      NO_SHOW: 'bg-orange-100 text-orange-800'
+      EXPIRED: 'bg-gray-100 text-gray-800'
     };
     return badges[status] || 'bg-gray-100 text-gray-800';
   };
@@ -172,7 +255,18 @@ export default function MyActiveReservationsPage() {
                       </td>
                     )}
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {['PENDING', 'RESERVED'].includes(reservation.status) && (
+                      {userRole === 'SECRETARY' && (
+                        <button
+                          onClick={() => handleEdit(reservation)}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-colors duration-150 shadow-sm mr-2"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Modifier
+                        </button>
+                      )}
+                      {['RESERVED'].includes(reservation.status) && (
                         <button
                           onClick={() => handleCancel(reservation.id)}
                           className={`inline-flex items-center gap-2 px-4 py-2 rounded font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors duration-150 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed`}
@@ -213,6 +307,96 @@ export default function MyActiveReservationsPage() {
                 Confirmer
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de modification */}
+      {showEditModal && reservationToEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4">Modifier la réservation</h2>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date de début
+                </label>
+                <input
+                  type="date"
+                  value={editFormData.startDate}
+                  onChange={(e) => setEditFormData({...editFormData, startDate: e.target.value})}
+                  className="w-full p-2 border rounded-md"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date de fin
+                </label>
+                <input
+                  type="date"
+                  value={editFormData.endDate}
+                  onChange={(e) => setEditFormData({...editFormData, endDate: e.target.value})}
+                  className="w-full p-2 border rounded-md"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Place de parking
+                </label>
+                <select
+                  value={editFormData.parkingSpotId}
+                  onChange={(e) => setEditFormData({...editFormData, parkingSpotId: e.target.value})}
+                  className="w-full p-2 border rounded-md"
+                  required
+                >
+                  <option value="">Sélectionnez une place</option>
+                  {getAvailableParkingSpots().map((spot) => (
+                    <option 
+                      key={spot.id} 
+                      value={spot.id}
+                    >
+                      Rangée {spot.row} - Place {spot.number.toString().padStart(2, '0')}
+                      {spot.hasCharger ? ' (Électrique)' : ''}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-sm text-gray-500">
+                  Les places électriques sont disponibles dans les rangées A et F
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Statut
+                </label>
+                <select
+                  value={editFormData.status}
+                  onChange={(e) => setEditFormData({...editFormData, status: e.target.value})}
+                  className="w-full p-2 border rounded-md"
+                  required
+                >
+                  <option value="RESERVED">Réservée</option>
+                  <option value="CHECKED_IN">Check-in effectué</option>
+                  <option value="CANCELLED">Annulée</option>
+                  <option value="EXPIRED">Expirée</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-4 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 font-semibold"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600 font-semibold"
+                >
+                  Enregistrer
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
